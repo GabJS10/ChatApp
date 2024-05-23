@@ -1,11 +1,11 @@
-import type { SockeType } from "../types/types";
+import type { SockeType, CustomSocket } from "../types/types";
 import Sidebar from "./Sidebar";
 import Chat from "./Chat";
 import { useEffect, useState } from "react";
 import type { users, user, messages as msg } from "../types/types";
 
 type Props = {
-  socket: SockeType;
+  socket: CustomSocket;
   name: string;
   setIsEntered: (isEntered: boolean) => void;
 };
@@ -15,9 +15,15 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   const [users, setUsers] = useState(initUsers);
   const [selectedUser, setSelectedUser] = useState<user | null>(null);
   const [messages, setMessages] = useState<msg[]>([]);
+  const sessionId = localStorage.getItem("sessionId");
 
-  socket.auth = { username: name };
-  socket.connect();
+  if (sessionId) {
+    socket.auth = { sessionId };
+    socket.connect();
+  } else {
+    socket.auth = { username: name };
+    socket.connect();
+  }
 
   socket.on("connect_error", (err) => {
     console.log(err.message);
@@ -29,7 +35,7 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
 
   socket.on("users", (users: users): void => {
     users.forEach((user) => {
-      user.self = user.userId === socket.id;
+      user.self = user.userId === socket.userId;
       user.connected = true;
     });
     const u = users.sort((a, b) => {
@@ -43,12 +49,26 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   });
 
   socket.on("user connected", (user: user): void => {
-    user.self = user.userId === socket.id;
-    user.connected = true;
-    setUsers([...users, user]);
+    if (users.findIndex((u) => u.userId === user.userId) === -1) {
+      user.self = user.userId === socket.userId;
+      user.connected = true;
+      setUsers([...users, user]);
+    } else {
+      const us = [...users];
+      for (let i = 0; i < us.length; i++) {
+        const u = users[i];
+        if (user.userId === u.userId) {
+          u.connected = true;
+          break;
+        }
+      }
+      setUsers(us);
+    }
   });
 
   socket.on("user disconnected", (u: user): void => {
+    console.log("se desconecto");
+
     const us = [...users];
     for (let i = 0; i < us.length; i++) {
       const user = users[i];
@@ -81,6 +101,8 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   });
 
   socket.on("connect", (): void => {
+    console.log("se conecto");
+
     const us = users;
     us.forEach((user) => {
       if (user.self) {
@@ -92,6 +114,9 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   });
 
   socket.on("disconnect", (): void => {
+    console.log("se desconecto de nuevo");
+    console.log(users);
+
     const us = users;
     us.forEach((user) => {
       if (user.self) {

@@ -1,7 +1,9 @@
 import { Socket } from "socket.io-client";
 
 export type SockeType = Socket<DefaultEventsMap, DefaultEventsMap>;
-
+export interface CustomSocket extends SockeType {
+  userId?: string;
+}
 interface messages {
   content: string;
   fromSelf: boolean;

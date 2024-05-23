@@ -2,14 +2,17 @@ import React from "react";
 import io from "socket.io-client";
 import ChatMainPage from "./components/ChatMainPage";
 import { useState } from "react";
+import { SockeType, CustomSocket } from "./types/types";
 
-const socket = io("/", {
+const socket: CustomSocket = io("/", {
   autoConnect: false,
 });
 
 const App: React.FC = () => {
-  const [name, setName] = useState("");
-  const [isEntered, setIsEntered] = useState(false);
+  const [name, setName] = useState(localStorage.getItem("username") || "");
+  const [isEntered, setIsEntered] = useState(
+    localStorage.getItem("username") ? true : false
+  );
 
   const handleNameChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -24,6 +27,24 @@ const App: React.FC = () => {
       setIsEntered(true);
     }
   };
+
+  socket.on(
+    "session",
+    ({
+      userId,
+      sessionId,
+      username,
+    }: {
+      userId: string;
+      sessionId: string;
+      username: string;
+    }) => {
+      socket.auth = { sessionId };
+      localStorage.setItem("sessionId", sessionId);
+      localStorage.setItem("username", username);
+      socket.userId = userId;
+    }
+  );
 
   return (
     <>
