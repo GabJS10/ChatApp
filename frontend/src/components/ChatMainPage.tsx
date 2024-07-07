@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar";
 import Chat from "./Chat";
 import { useEffect, useState } from "react";
 import type { users, user, messages as msg } from "../types/types";
-
+import imgReader from "../helpers/imgReader";
 type Props = {
   socket: CustomSocket;
   name: string;
@@ -26,17 +26,15 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   }
 
   socket.on("connect_error", (err) => {
-    console.log(err.message);
 
     if (err.message === "invalid username") {
       setIsEntered(false);
     }
   });
 
-  socket.on("users", (users: users): void => {
-    users.forEach((user) => {
+  socket.on("users", (users: users, msgs: msg[]): void => {
+    users.forEach((user) => { 
       user.self = user.userId === socket.userId;
-      user.connected = true;
     });
     const u = users.sort((a, b) => {
       if (a.self) return -1;
@@ -45,6 +43,15 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
       return a.username > b.username ? 1 : 0;
     });
 
+    const msg = msgs.map((m) => {
+      m.fromSelf = m.from === socket.userId;
+      if (m.files) {
+        m.img = imgReader(m.files);
+      }
+      return m;
+    });
+    
+    setMessages(msg); 
     setUsers(u);
   });
 
@@ -67,7 +74,6 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   });
 
   socket.on("user disconnected", (u: user): void => {
-    console.log("se desconecto");
 
     const us = [...users];
     for (let i = 0; i < us.length; i++) {
@@ -82,7 +88,7 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
 
   socket.on("message_response", (message: msg): void => {
     const us = users;
-
+    
     for (let i = 0; i < us.length; i++) {
       const user = us[i];
       if (user.userId === message.from) {
@@ -96,12 +102,15 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
       }
     }
 
+    if (message.files) {
+      message.img = imgReader(message.files);
+    }
+
     setUsers(us);
     setMessages([...messages, message]);
   });
 
   socket.on("connect", (): void => {
-    console.log("se conecto");
 
     const us = users;
     us.forEach((user) => {
@@ -114,8 +123,6 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   });
 
   socket.on("disconnect", (): void => {
-    console.log("se desconecto de nuevo");
-    console.log(users);
 
     const us = users;
     us.forEach((user) => {
@@ -136,7 +143,7 @@ const ChatMainPage: React.FC<Props> = ({ socket, name, setIsEntered }) => {
   return (
     <>
       <div className="container">
-        <Sidebar users={users} setSelectedUser={setSelectedUser} />
+        <Sidebar users={users} setSelectedUser={setSelectedUser} socket={socket} />
         {selectedUser && (
           <Chat
             socket={socket}

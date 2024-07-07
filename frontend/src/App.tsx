@@ -48,20 +48,25 @@ const App: React.FC = () => {
 
   return (
     <>
-      {!isEntered ? (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            onChange={handleNameChange}
-          />
-          <button type="submit">Enter</button>
-        </form>
-      ) : (
-        <ChatMainPage socket={socket} name={name} setIsEntered={setIsEntered} />
-      )}
-    </>
+  {!isEntered ? (
+    <div className="enter-page">
+      <form className="enter-form" onSubmit={handleSubmit}>
+        <h2>Bienvenido a ChatExpress</h2>
+        <input
+          type="text"
+          placeholder="Ingrese su nombre"
+          value={name}
+          onChange={handleNameChange}
+        />
+        <button type="submit">Entrar</button>
+        <p>Recuerda que una vez cierres la sesion, tu chat se borrara</p>
+      </form>
+    </div>
+  ) : (
+    <ChatMainPage socket={socket} name={name} setIsEntered={setIsEntered} />
+  )}
+</>
+
   );
 };
 

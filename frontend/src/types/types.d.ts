@@ -9,6 +9,8 @@ interface messages {
   fromSelf: boolean;
   from: string | undefined;
   to: string;
+  files: string | ArrayBuffer | null | undefined;
+  img: string;
 }
 
 interface ChatUser {

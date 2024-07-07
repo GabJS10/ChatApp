@@ -3,6 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { sequelize } from "./src/database/database.js";
 import { Sessions } from "./src/models/sessions.js";
+import  SessionMessage  from "./src/models/sessionMessage.js";
 import crypto from "crypto";
 
 const ramdomid = () => crypto.randomBytes(8).toString("hex");
@@ -14,8 +15,12 @@ const io = new Server(httpServer);
 
 io.use(async (socket, next) => {
   const sessionId = socket.handshake.auth.sessionId;
+  const username = socket.handshake.auth.username;
+  
   if (sessionId) {
-    const session = await Sessions.findOne({ where: { sessionId } });
+    const session = await Sessions.findByPk(sessionId)
+    session.set({connected:true})
+    session.save()
     if (session) {
       socket.sessionId = sessionId;
       socket.userId = session.userId;
@@ -24,7 +29,6 @@ io.use(async (socket, next) => {
     }
   }
 
-  const username = socket.handshake.auth.username;
   if (!username) {
     return next(new Error("invalid username"));
   }
@@ -36,7 +40,7 @@ io.use(async (socket, next) => {
 
 io.on("connection", async (socket) => {
   const s = await Sessions.findOne({ where: { sessionId: socket.sessionId } });
-  if (s === null) {
+  if (s === null) { 
     await Sessions.create({
       userId: socket.userId,
       sessionId: socket.sessionId,
@@ -51,21 +55,27 @@ io.on("connection", async (socket) => {
     username: socket.username,
   });
 
+  socket.join(socket.userId)
+
   //listing all users and send to the client
 
   const users = [];
+  //const messagePerUser = new Map();
 
   const sessions = await Sessions.findAll();
-  console.log(sessions);
-  sessions.forEach((session) => {
-    users.push({
+  console.log(sessions);  
+
+  const messages = await SessionMessage.findMessagesPerUser(socket.userId);
+   
+  sessions.forEach((session) => { 
+    users.push({ 
       userId: session.userId,
       username: session.username,
       connected: session.connected,
     });
-  });
+  }); 
 
-  socket.emit("users", users);
+  socket.emit("users", users, messages);
 
   console.log("new user connected: " + socket.username);
 
@@ -74,15 +84,30 @@ io.on("connection", async (socket) => {
     username: socket.username,
   });
 
-  socket.on("message", ({ content, to }) => {
+  socket.on("message", ({ content, to, files }) => { 
     console.log("message received: " + content);
-    socket.to(to).emit("message_response", {
+    socket.to(to).to(socket.userId).emit("message_response", {
       content,
-      fromSelf: false,
-      from: socket.id,
+      fromSelf: true ? to === socket.userId : false,
+      from: socket.userId,
       to: to,
+      files,
     });
+
+    SessionMessage.create({  
+      content: content, 
+      fromSelf: true ? to === socket.userId : false,
+      from: socket.userId,
+      to: to,
+      files,
+    });
+
+
   });
+
+  socket.on("logout", async ( sessionId ) => {
+    await Sessions.destroy({ where: { sessionId: socket.sessionId } });
+  })
 
   socket.on("disconnect", async () => {
     const match = await io.in(socket.id).fetchSockets();
@@ -107,7 +132,7 @@ async function main() {
     httpServer.listen(3000, () => {
       console.log("listening on http://localhost:3000");
     });
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ force: false });
     console.log("database connected");
   } catch (error) {
     console.log(error);
