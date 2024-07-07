@@ -1,4 +1,4 @@
-import type { SockeType, CustomSocket,user, messages as msg } from "../types/types";
+import type { CustomSocket,user, messages as msg } from "../types/types";
 import { useState } from "react";
 import imgReader from "../helpers/imgReader";
 type Props = {

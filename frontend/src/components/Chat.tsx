@@ -1,4 +1,4 @@
-import type { SockeType, CustomSocket, user, messages as msg, users } from "../types/types";
+import type { CustomSocket, user, messages as msg, users } from "../types/types";
 import MessagesBar from "./MessagesBar";
 type Props = {
   socket: CustomSocket;

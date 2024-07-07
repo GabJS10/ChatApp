@@ -1,4 +1,4 @@
-import type { SockeType, CustomSocket } from "../types/types";
+import type { CustomSocket } from "../types/types";
 import Sidebar from "./Sidebar";
 import Chat from "./Chat";
 import { useEffect, useState } from "react";
