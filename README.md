@@ -1,32 +1,33 @@
 # ChatExpress
 
-ChatExpress es una aplicación de chat temporal construida con React, Express y Socket.io. Esta aplicación permite a los usuarios enviar mensajes de texto y compartir imágenes, y todos los mensajes se eliminan una vez que se cierra la sesión.
+ChatExpress is a temporary chat application built with React, Express, and Socket.io. The application allows users to send text messages and share images, and all messages are deleted once the session is closed.
 
-## Características
+## Features
 
-- Envío de mensajes de texto.
-- Compartir imágenes.
-- Mensajes temporales que se eliminan al cerrar la sesión.
-- Diferenciación visual entre mensajes enviados y recibidos.
-- Indicadores de conexión para los usuarios.
+- Send text messages.
+- Share images.
+- Temporary messages that are deleted on session close.
+- Visual differentiation between sent and received messages.
+- User connection indicators.
 
-## Tecnologías Utilizadas
+## Technologies Used
 
 - **Frontend:** React, TypeScript, CSS
 - **Backend:** Express, Socket.io
-- **Base de Datos:** Sequelize con SQLite
+- **Database:** Sequelize with SQLite
 
-## Instalación
+## Installation
 
-1. Clona el repositorio:
+1. Clone the repository:
 
    ```bash
-   git clone https://github.com/tu-usuario/ChatExpress.git
-2. Navega al directoriod del proyecto
+   git clone https://github.com/your-username/ChatExpress.git 
+
+2. Navigate to the project directory:
 
    ```bash
    cd ChatExpress
-3. Instala las dependencias tanto para el frontend como para el backend:
+3. Install dependencies for both frontend and backend:
 
    ```bash
    npm install
